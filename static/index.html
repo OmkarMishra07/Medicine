@@ -1893,8 +1893,55 @@
 
     /* Chip-style filters */
     .filter-chips {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       margin-bottom: 1.25rem;
+    }
+
+    /* Medicine-themed toggle pill */
+    .search-mode-toggle {
+      display: inline-flex;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+      gap: 2px;
+      position: relative;
+    }
+
+    .search-mode-toggle .mode-btn {
+      padding: 0.4rem 1.2rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .search-mode-toggle .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .search-mode-toggle .mode-btn.active {
+      background: var(--gradient-primary);
+      color: var(--text-on-accent);
+      box-shadow: 0 2px 12px rgba(0,229,195,0.3);
+    }
+
+    .search-mode-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+      padding: 0 0.5rem;
     }
 
     .chip {
@@ -1914,6 +1961,78 @@
       background: var(--pill-mint);
       border-color: var(--pill-mint);
       color: var(--text-on-accent);
+    }
+
+    /* Artist result cards in search */
+    .artist-result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .artist-result-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1rem;
+      cursor: pointer;
+      transition: var(--transition-bounce);
+      text-align: center;
+    }
+
+    .artist-result-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--pill-mint);
+      box-shadow: 0 8px 24px rgba(0,229,195,0.15);
+    }
+
+    .artist-result-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--gradient-cool);
+      margin: 0 auto 0.75rem;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      border: 2px solid var(--border-bright);
+    }
+
+    .artist-result-avatar img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .artist-result-name {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .artist-result-count {
+      font-size: 0.7rem;
+      color: var(--pill-mint);
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+    }
+
+    /* cached badge */
+    .result-cached-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.6rem;
+      background: var(--pill-mint-dim);
+      border: 1px solid var(--pill-mint);
+      border-radius: var(--radius-pill);
+      font-size: 0.65rem;
+      color: var(--pill-mint);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+      vertical-align: middle;
+      margin-left: 0.5rem;
     }
 
     /* ─── Responsive ─── */
@@ -2156,23 +2275,23 @@
             type="text"
             class="search-input-large"
             id="main-search"
-            placeholder="Artists, songs, albums, playlists..."
+            placeholder="Search songs, artists..."
             autocomplete="off"
-            id="main-search-input"
           />
           <button class="search-clear-btn" id="search-clear" onclick="clearSearch()">✕</button>
-          <div class="search-suggestions" id="search-suggestions">
-            <!-- Suggestions dropdown -->
-          </div>
         </div>
 
-        <!-- Filter chips -->
-        <div class="filter-chips" id="search-filters">
-          <button class="chip active" data-filter="all" onclick="setSearchFilter(this,'all')">All</button>
-          <button class="chip" data-filter="songs" onclick="setSearchFilter(this,'songs')">Songs</button>
-          <button class="chip" data-filter="artists" onclick="setSearchFilter(this,'artists')">Artists</button>
-          <button class="chip" data-filter="albums" onclick="setSearchFilter(this,'albums')">Albums</button>
-          <button class="chip" data-filter="playlists" onclick="setSearchFilter(this,'playlists')">Playlists</button>
+        <!-- Medicine-themed search mode toggle -->
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+          <span class="search-mode-label">💊 PRESCRIBE:</span>
+          <div class="search-mode-toggle" id="search-mode-toggle">
+            <button class="mode-btn active" id="mode-songs" onclick="setSearchMode('songs')">
+              🎵 Song
+            </button>
+            <button class="mode-btn" id="mode-artists" onclick="setSearchMode('artists')">
+              👩‍⚕️ Artist
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2183,7 +2302,7 @@
           <!-- Populated by JS -->
         </div>
 
-        <div class="result-label" style="margin-top:1.5rem;">Popular Searches</div>
+        <div class="result-label" style="margin-top:1.5rem;">Popular Prescriptions</div>
         <div class="recent-searches" id="popular-searches-list">
           <!-- Populated by JS -->
         </div>
@@ -2197,8 +2316,14 @@
 
       <!-- Search Results -->
       <div class="search-results" id="search-results">
+        <!-- Artist mode: artist info card + songs -->
+        <div id="search-artist-section" style="display:none; margin-bottom:1.5rem;">
+          <div class="result-label" id="search-artist-label">Artist</div>
+          <div id="search-artist-card"></div>
+        </div>
+
         <div class="search-result-section" id="search-result-songs">
-          <div class="result-label">Songs</div>
+          <div class="result-label" id="search-result-label">Songs</div>
           <div class="track-list" id="search-tracks-list"></div>
         </div>
       </div>
@@ -2600,7 +2725,7 @@ const STATE = {
   repeatMode: 0, // 0=none, 1=all, 2=one
   volume: 0.8,
   isMuted: false,
-  searchFilter: 'all',
+  searchFilter: 'songs',
   currentPage: 'home',
   user: null,
   searchQuery: '',
@@ -2781,16 +2906,17 @@ function renderRecommendations() {
   list.innerHTML = DATA.recommended.map((s, i) => buildTrackItem(s, i)).join('');
 }
 
-function buildTrackItem(s, i) {
+function buildTrackItem(s, i, customOnClick = null) {
   const isLiked = likedSongs.some(l => l.id === s.id);
   const isPlaying = STATE.currentTrack && STATE.currentTrack.id === s.id;
   const dur = s.duration ? formatTime(s.duration) : s.duration_str || '--:--';
   const thumb = s.thumbnail
     ? `<img src="${s.thumbnail}" alt="${s.title}" onerror="this.style.display='none';this.parentElement.innerHTML='${s.emoji||'🎵'}'" />`
     : s.emoji || '🎵';
+  const clickAction = customOnClick ? customOnClick : `playSong(${JSON.stringify(s).replace(/"/g,'&quot;')})`;
   return `
     <div class="track-item${isPlaying?' playing':''}" id="track-${s.id}"
-         onclick="playSong(${JSON.stringify(s).replace(/"/g,'&quot;')})"
+         onclick="${clickAction}"
          oncontextmenu="showContext(event,${JSON.stringify(s).replace(/"/g,'&quot;')})">
       <div class="track-num">${i+1}</div>
       <div class="track-wave"><span></span><span></span><span></span><span></span></div>
@@ -2945,13 +3071,110 @@ function setSearchFilter(btn, filter) {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   STATE.searchFilter = filter;
+  // If there's an active query, re-search with the new filter
+  const inp = document.getElementById('main-search');
+  if (inp && inp.value.trim().length > 1) {
+    performSearch(inp.value.trim());
+  }
+}
+
+async function apiSearchList(query) {
+  const res = await fetch('/api/search_list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.results || [];
+}
+
+let searchResultsCache = [];
+const frontendSearchCache = {};   // query-list cache: cacheKey -> [{id,title,...}]
+const streamPreloadCache = {};    // video id -> {stream_url, info, ts} — preloaded stream URLs
+const STREAM_CACHE_TTL = 40 * 60 * 1000; // 40 minutes in ms
+const STREAM_CACHE_MAX = 60;              // max entries before LRU eviction
+
+// ─── Stream preload cache helpers ─────────────────────
+function streamCacheGet(videoId) {
+  const e = streamPreloadCache[videoId];
+  if (!e) return null;
+  if (Date.now() - e.ts > STREAM_CACHE_TTL) { delete streamPreloadCache[videoId]; return null; }
+  return e;
+}
+
+function streamCacheSet(videoId, data) {
+  // LRU eviction: if over max, remove oldest
+  const keys = Object.keys(streamPreloadCache);
+  if (keys.length >= STREAM_CACHE_MAX) {
+    const oldest = keys.sort((a,b) => streamPreloadCache[a].ts - streamPreloadCache[b].ts)[0];
+    delete streamPreloadCache[oldest];
+  }
+  streamPreloadCache[videoId] = { ...data, ts: Date.now() };
+}
+
+// Silently preload stream URLs for all songs in the list (background, non-blocking)
+async function preloadSearchResults(tracks) {
+  for (let i = 0; i < tracks.length; i++) {
+    const t = tracks[i];
+    if (!t.id || streamCacheGet(t.id)) continue; // skip already cached
+    // Stagger requests so we don't hammer the server
+    await new Promise(r => setTimeout(r, i * 800));
+    try {
+      const ytUrl = 'https://www.youtube.com/watch?v=' + t.id;
+      const data = await apiSearch(ytUrl);
+      if (data && data.stream_url) {
+        streamCacheSet(t.id, data);
+      }
+    } catch (e) { /* silent — best effort */ }
+  }
+}
+
+// ─── Crossfade helper ─────────────────────────────────
+let _fadeInterval = null;
+function fadeOutAudio(durationMs) {
+  return new Promise(resolve => {
+    if (_fadeInterval) clearInterval(_fadeInterval);
+    if (!STATE.isPlaying || audio.paused) { resolve(); return; }
+    const steps = 30;
+    const stepTime = durationMs / steps;
+    const startVol = audio.volume;
+    let step = 0;
+    _fadeInterval = setInterval(() => {
+      step++;
+      audio.volume = Math.max(0, startVol * (1 - step / steps));
+      if (step >= steps) {
+        clearInterval(_fadeInterval);
+        _fadeInterval = null;
+        audio.pause();
+        audio.volume = STATE.isMuted ? 0 : STATE.volume; // restore volume for next song
+        resolve();
+      }
+    }, stepTime);
+  });
+}
+
+function playFromSearch(idx) {
+  STATE.queue = searchResultsCache.map(t => ({...t}));
+  STATE.queueIndex = idx;
+  renderQueue();
+  _playSongByVideoId(searchResultsCache[idx]);
+}
+
+function playAllSearchResults() {
+  if (searchResultsCache.length === 0) return;
+  STATE.queue = searchResultsCache.map(t => ({...t}));
+  STATE.queueIndex = 0;
+  renderQueue();
+  _playSongByVideoId(searchResultsCache[0]);
+  toast('▶ Playing all — ' + searchResultsCache.length + ' songs queued', 'success');
 }
 
 async function performSearch(query) {
   if (!query) return;
   STATE.searchQuery = query;
 
-  // Save to recent searches
   if (!recentSearches.includes(query)) {
     recentSearches.unshift(query);
     recentSearches = recentSearches.slice(0, 10);
@@ -2962,68 +3185,232 @@ async function performSearch(query) {
   document.getElementById('search-loading').classList.add('active');
   document.getElementById('search-results').classList.remove('active');
 
+  const isArtistMode = STATE.searchFilter === 'artists';
+  const finalQuery = isArtistMode ? query + ' top songs' : query;
+  const cacheKey = STATE.searchFilter + ':' + finalQuery.toLowerCase();
+
   try {
-    const data = await apiSearch(query);
+    let results;
+    let fromCache = false;
+
+    if (frontendSearchCache[cacheKey]) {
+      results = frontendSearchCache[cacheKey];
+      fromCache = true;
+    } else {
+      results = await apiSearchList(finalQuery);
+      if (results && results.length > 0) frontendSearchCache[cacheKey] = results;
+    }
 
     document.getElementById('search-loading').classList.remove('active');
 
-    // Build track from API result — _query lets auto-retry work
-    const track = {
-      id:         'search_' + Date.now(),
-      title:      data.info.title  || query,
-      artist:     data.info.artist || data.info.uploader || 'Unknown',
-      thumbnail:  data.info.thumbnail || '',
-      duration:   data.info.duration  || 0,
-      stream_url: data.stream_url,
-      emoji:      '🎵',
-      _query:     query,
-    };
+    if (!results || results.length === 0) {
+      toast('⚠ No results found. Try a different search.', 'info');
+      showRecentSearches();
+      return;
+    }
 
+    searchResultsCache = results.map(r => ({
+      id: r.id,
+      title: r.title,
+      artist: r.artist,
+      thumbnail: r.thumbnail,
+      duration: r.duration,
+      emoji: '🎵',
+    }));
+
+    // Update result label
+    const labelEl = document.getElementById('search-result-label');
+    if (labelEl) {
+      labelEl.innerHTML = isArtistMode
+        ? `🎤 Top songs — <strong style="color:var(--pill-mint)">${query}</strong>`
+          + (fromCache ? ' <span class="result-cached-badge">⚡ INSTANT</span>' : '')
+        : `🎵 Results for <strong style="color:var(--pill-mint)">${query}</strong>`
+          + (fromCache ? ' <span class="result-cached-badge">⚡ INSTANT</span>' : '');
+    }
+
+    // Show artist banner in artist mode
+    const artistSection = document.getElementById('search-artist-section');
+    const artistCard = document.getElementById('search-artist-card');
+    if (isArtistMode && artistSection && artistCard) {
+      const first = results[0];
+      artistSection.style.display = 'block';
+      artistCard.innerHTML = `
+        <div style="display:flex;align-items:center;gap:1.5rem;padding:1.25rem;background:var(--bg-elevated);border:1px solid var(--border-bright);border-radius:var(--radius-lg);margin-bottom:1rem;">
+          <div class="artist-result-avatar">
+            ${first && first.thumbnail ? `<img src="${first.thumbnail}" alt="${query}" onerror="this.parentElement.innerHTML='🎤'"/>` : '🎤'}
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:0.3rem;">${query}</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.6rem;">🎵 ${results.length} top songs found</div>
+            <button onclick="playAllSearchResults()" style="padding:0.45rem 1.2rem;background:var(--gradient-primary);border:none;border-radius:var(--radius-pill);color:var(--text-on-accent);font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow-pill);">▶ Play All</button>
+          </div>
+        </div>`;
+    } else if (artistSection) {
+      artistSection.style.display = 'none';
+    }
+
+    // Render track list
     const trackList = document.getElementById('search-tracks-list');
     if (trackList) {
-      trackList.innerHTML = buildTrackItem(track, 0);
+      trackList.innerHTML = searchResultsCache.map((track, idx) =>
+        buildTrackItem(track, idx, `playFromSearch(${idx})`)
+      ).join('');
     }
 
     document.getElementById('search-results').classList.add('active');
-    toast(`✅ Found: ${track.title}`, 'success');
+
+    if (fromCache) {
+      toast(`⚡ Instant — ${results.length} results from cache`, 'success');
+    } else {
+      toast(`✅ Found ${results.length} results`, 'success');
+      // Preload stream URLs in background for instant playback later
+      setTimeout(() => preloadSearchResults(searchResultsCache), 500);
+    }
 
   } catch (err) {
     document.getElementById('search-loading').classList.remove('active');
-    toast('⚠ ' + (err.message || 'Search failed. Check connection.'), 'error');
+    toast('⚠ ' + (err.message || 'Search failed. Try again.'), 'error');
     showRecentSearches();
+  }
+}
+
+function setSearchMode(mode) {
+  STATE.searchFilter = mode;
+  document.getElementById('mode-songs').classList.toggle('active', mode === 'songs');
+  document.getElementById('mode-artists').classList.toggle('active', mode === 'artists');
+  const inp = document.getElementById('main-search');
+  if (inp) {
+    inp.placeholder = mode === 'artists'
+      ? '👩‍⚕️ Type artist name (e.g. Taylor Swift)...'
+      : '🎵 Type song name (e.g. Blinding Lights)...';
+    if (inp.value.trim().length > 1) performSearch(inp.value.trim());
   }
 }
 
 // ═══════════════════════════════════════════════════════
 // PLAYBACK ENGINE
 // ═══════════════════════════════════════════════════════
-const _streamCache = {};   // key → stream path, value → { url, ts }
-let _retrying = false;     // guard against infinite retry loops
+const _streamCache = {};   // legacy key — kept for backward compat with error handler
+let _retrying = false;
+let _currentPlayId = 0;   // guard: cancel stale play requests when user clicks fast
 
-// Resolve and play a song — always goes through /api/search to get a fresh stream URL
+// ─── Direct video-ID fast path (used for all search results) ─────
+async function _playSongByVideoId(song) {
+  if (!song) return;
+  if (STATE.currentTrack && STATE.currentTrack.id === song.id && audio.src && !audio.paused) {
+    return; // already playing this song
+  }
+
+  const playId = ++_currentPlayId;
+  _retrying = false;
+  STATE.currentTrack = { ...song };
+  STATE.isPlaying = false;
+  updatePlayerUI(song);
+  updatePlayPauseUI();
+  addToRecent(song);
+
+  const titleEl = document.getElementById('player-title');
+  if (titleEl) titleEl.textContent = '⏳ Loading...';
+
+  // Fade out current music while we fetch/get the stream
+  const fadePromise = fadeOutAudio(1500); // 1.5s fade while we look up stream
+
+  try {
+    const ytUrl = 'https://www.youtube.com/watch?v=' + song.id;
+    let data;
+
+    // Check preload cache first — instant if hit
+    const cached = streamCacheGet(song.id);
+    if (cached) {
+      data = cached;
+    } else {
+      // Fetch in parallel with fade
+      data = await apiSearch(ytUrl);
+      if (data && data.stream_url) streamCacheSet(song.id, data);
+    }
+
+    if (playId !== _currentPlayId) return; // user clicked something else
+
+    await fadePromise; // ensure fade is done before switching
+
+    if (playId !== _currentPlayId) return;
+
+    STATE.currentTrack = {
+      ...song,
+      title:     data.info.title     || song.title,
+      artist:    data.info.artist    || data.info.uploader || song.artist || '',
+      thumbnail: data.info.thumbnail || song.thumbnail || '',
+      duration:  data.info.duration  || song.duration  || 0,
+      stream_url: data.stream_url,
+      _query:    ytUrl,
+    };
+    updatePlayerUI(STATE.currentTrack);
+
+    const src = data.stream_url + '&_t=' + Date.now();
+    audio.src = src;
+    audio.load();
+    audio.volume = STATE.isMuted ? 0 : STATE.volume;
+
+    const pp = audio.play();
+    if (pp) {
+      pp.then(() => {
+        if (playId !== _currentPlayId) { audio.pause(); return; }
+        STATE.isPlaying = true;
+        updatePlayPauseUI();
+        toast('▶ ' + STATE.currentTrack.title, 'success');
+      }).catch(err => {
+        if (err.name !== 'AbortError') toast('⚠ Playback: ' + err.message, 'error');
+        STATE.isPlaying = false;
+        updatePlayPauseUI();
+      });
+    }
+  } catch (err) {
+    if (playId !== _currentPlayId) return;
+    await fadePromise.catch(() => {});
+    toast('⚠ Could not load: ' + (err.message || 'Unknown error'), 'error');
+    STATE.isPlaying = false;
+    updatePlayPauseUI();
+    if (titleEl) titleEl.textContent = song.title || 'Unknown';
+  }
+}
+
+// ─── Smart router ─────────────────────────────────────
+function _smartPlay(song) {
+  // 11-char YouTube ID? Use fast direct path
+  if (song && song.id && /^[a-zA-Z0-9_-]{11}$/.test(song.id)) {
+    _playSongByVideoId(song);
+  } else {
+    playSong(song);
+  }
+}
+
+// ─── Legacy text-search path (mood, daily dose, etc.) ─
 async function playSong(song) {
-  // Same song? Toggle pause/play
-  if (STATE.currentTrack && STATE.currentTrack.id === song.id && audio.src) {
+  if (STATE.currentTrack && STATE.currentTrack.id === song.id && audio.src && !audio.paused) {
     togglePlayPause();
     return;
   }
 
   _retrying = false;
+  const playId = ++_currentPlayId;
   STATE.currentTrack = song;
   STATE.isPlaying = false;
   updatePlayerUI(song);
   updatePlayPauseUI();
   addToRecent(song);
 
-  // Show loading state in player title
   const titleEl = document.getElementById('player-title');
   if (titleEl) titleEl.textContent = '⏳ ' + (song.title || 'Loading...');
+
+  // Fade out current
+  await fadeOutAudio(1500);
+  if (playId !== _currentPlayId) return;
 
   try {
     const query = song._query || `${song.title} ${song.artist || ''}`.trim();
     const data  = await apiSearch(query);
+    if (playId !== _currentPlayId) return;
 
-    // Update track with real metadata from yt-dlp
     STATE.currentTrack = {
       ...song,
       title:      data.info.title      || song.title,
@@ -3033,38 +3420,34 @@ async function playSong(song) {
       stream_url: data.stream_url,
       _query:     query,
     };
-
     updatePlayerUI(STATE.currentTrack);
 
-    // Assign src and play
-    // Add a cache-busting ts param to force browser to re-request
     const src = data.stream_url + '&_t=' + Date.now();
-    audio.pause();
     audio.src = src;
-    audio.load();           // important: force re-init of media element
+    audio.load();
+    audio.volume = STATE.isMuted ? 0 : STATE.volume;
 
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
+          if (playId !== _currentPlayId) { audio.pause(); return; }
           STATE.isPlaying = true;
           updatePlayPauseUI();
           toast(`▶ Now playing: ${STATE.currentTrack.title}`, 'success');
         })
         .catch(err => {
-          // NotSupportedError means the format isn't playable in this browser
           if (err.name === 'NotSupportedError') {
-            toast('⚠ Audio format not supported by your browser. Try a different song.', 'error');
+            toast('⚠ Audio format not supported. Try another song.', 'error');
           } else if (err.name !== 'AbortError') {
-            // AbortError happens when we quickly swap src — ignore it
             toast('⚠ Playback error: ' + err.message, 'error');
           }
           STATE.isPlaying = false;
           updatePlayPauseUI();
         });
     }
-
   } catch (err) {
+    if (playId !== _currentPlayId) return;
     toast('⚠ Could not load song: ' + (err.message || 'Unknown error'), 'error');
     STATE.isPlaying = false;
     updatePlayPauseUI();
@@ -3196,15 +3579,16 @@ function nextTrack() {
     STATE.queueIndex = Math.min(STATE.queueIndex + 1, STATE.queue.length - 1);
   }
   const next = STATE.queue[STATE.queueIndex];
-  if (next) playSong(next);
+  if (next) _smartPlay(next);
 }
 
 function prevTrack() {
   if (audio.currentTime > 3) { audio.currentTime = 0; return; }
   STATE.queueIndex = Math.max(0, STATE.queueIndex - 1);
   const prev = STATE.queue[STATE.queueIndex];
-  if (prev) playSong(prev);
+  if (prev) _smartPlay(prev);
 }
+
 
 function toggleShuffle() {
   STATE.isShuffle = !STATE.isShuffle;
@@ -3246,7 +3630,7 @@ function renderQueue() {
 
 function playQueueItem(i) {
   STATE.queueIndex = i;
-  playSong(STATE.queue[i]);
+  _smartPlay(STATE.queue[i]);
 }
 
 function removeFromQueue(i) {
